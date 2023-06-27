@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  web:
+    restart: unless-stopped
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: ./dockerfiles/python39/Dockerfile
+      labels:
+        - vincar-backend
+    volumes:
+        - .:/code
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        gunicorn app.main:app --workers 2 \
+        --worker-class uvicorn.workers.UvicornWorker -b 0.0.0.0:8069
+    ports:
+      - 8069:8069
+    depends_on:
+      - mongodb
+  
+  mongodb:
+    image: mongo:latest
+    env_file:
+      - .env
+    ports:
+      - "27017:27017"
+    environment:
+      - "MONGO_INITDB_DATABASE=${MONGO_DB}"
+      - "MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}"
+      - "MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}"
+    command:
+      mongod --quiet --logpath /dev/null
