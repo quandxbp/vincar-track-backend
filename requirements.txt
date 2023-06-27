@@ -52,7 +52,7 @@ uvicorn==0.22.0
     # via fastapi-nano (pyproject.toml)
 pymongo==3.11.1
 
-motor==2.3.0
+motor==3.2.0
 
 rich==13.4.2
 # The following packages are considered to be unsafe in a requirements file:
