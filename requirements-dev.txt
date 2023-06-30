@@ -80,7 +80,7 @@ pyasn1==0.5.0
     #   rsa
 pycparser==2.21
     # via cffi
-pydantic==1.10.9
+pydantic==2.0
     # via fastapi
 pyproject-hooks==1.0.0
     # via build
