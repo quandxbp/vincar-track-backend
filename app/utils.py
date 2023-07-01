@@ -26,13 +26,13 @@ def get_logger(module_name):
     return logger
 
 
-async def init_mongo(db_name: str, db_url: str, collection: str):
+async def init_mongo(db_name: str, db_url: str, collections: list):
     """
 
     Args:
         db_name:
         db_url:
-        collection:
+        collections:
 
     Returns:
 
@@ -40,7 +40,7 @@ async def init_mongo(db_name: str, db_url: str, collection: str):
     mongo_client = AsyncIOMotorClient(db_url)
     mongo_database = mongo_client[db_name]
     mongo_collections = {
-        collection: mongo_database.get_collection(collection),
+        collection: mongo_database.get_collection(collection) for collection in collections
     }
     # return {0: mongo_client, 1: mongo_database, 2: mongo_collections}
     return mongo_client, mongo_database, mongo_collections

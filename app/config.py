@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     db_url: str = os.getenv("MONGO_URL", "")
     db_name: str = os.getenv("MONGO_DB", "")
-    collection: str = os.getenv("MONGO_COLLECTION", "")
+    collections: list = os.getenv("MONGO_COLLECTIONS", "").split(',')
     test_db_name: str = os.getenv("MONGO_TEST_DB", "")
 
 
