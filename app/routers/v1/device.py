@@ -1,12 +1,8 @@
 from fastapi import FastAPI, Body, HTTPException, status, APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import Response, JSONResponse
-from starlette.status import HTTP_201_CREATED
-from typing import Optional, List
-from bson import ObjectId
 
 from app import config
-from app.routers.exceptions import NotFoundHTTPException
 from app.schemas.device import *
 
 import app.main as main
@@ -32,7 +28,7 @@ async def list_devices():
 
 @router.get("/{id}", response_description="Get a single device", response_model=Device)
 async def show_device(id: str):
-    if (device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"_id": ObjectId(id)})) is not None:
+    if (device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"_id": id})) is not None:
         return device
 
     raise HTTPException(status_code=404, detail=f"device {id} not found")
@@ -40,7 +36,6 @@ async def show_device(id: str):
 
 @router.put("/{id}", response_description="Update a device", response_model=Device)
 async def update_device(id: str, device: UpdateDevice = Body(...)):
-    id = ObjectId(id)
     device = {k: v for k, v in device.dict().items() if v is not None}
 
     if len(device) >= 1:
@@ -60,7 +55,7 @@ async def update_device(id: str, device: UpdateDevice = Body(...)):
 
 @router.delete("/{id}", response_description="Delete a device")
 async def delete_device(id: str):
-    delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"_id": ObjectId(id)})
+    delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"_id": id})
 
     if delete_result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -1,12 +1,10 @@
 from fastapi import FastAPI, Body, HTTPException, status, APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import Response, JSONResponse
-from starlette.status import HTTP_201_CREATED
-from typing import Optional, List
+from passlib.context import CryptContext
 
 from app import config
 from app.schemas.user import *
-from app.core.auth import get_password_hash
 
 import app.main as main
 
@@ -14,6 +12,12 @@ global_settings = config.get_settings()
 USERS_COLLECTION = "users"
 
 router = APIRouter()
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
 
 
 @router.get("/", response_description="List all users", response_model=List[ResponseUser])
@@ -35,7 +39,7 @@ async def create_user(user: UserCreate = Body(...)):
 
 @router.delete("/{user_id}", response_description="Delete a user")
 async def delete_user(user_id: str):
-    delete_result = await main.app.state.mongo_collections[USERS_COLLECTION].delete_one({"_id": ObjectId(user_id)})
+    delete_result = await main.app.state.mongo_collections[USERS_COLLECTION].delete_one({"_id": user_id})
 
     if delete_result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -45,7 +49,6 @@ async def delete_user(user_id: str):
 
 @router.put("/{user_id}", response_description="Update a user", response_model=ResponseUser)
 async def update_user(user_id: str, user: UpdateUser = Body(...)):
-    user_id = ObjectId(user_id)
     user = {k: v for k, v in user.dict().items() if v is not None}
 
     if len(user) >= 1:
@@ -65,7 +68,6 @@ async def update_user(user_id: str, user: UpdateUser = Body(...)):
 
 @router.put("/device/{user_id}", response_description="Update a user's Device", response_model=ResponseUser)
 async def update_device_user(user_id: str, data: UpdateUserDevice = Body(...)):
-    user_id = ObjectId(user_id)
     data = {k: v for k, v in data.dict().items() if v is not None}
 
     if len(data) >= 1:

@@ -37,6 +37,9 @@ async def init_mongo(db_name: str, db_url: str, collections: list):
     Returns:
 
     """
+    db_url = "mongodb+srv://quandxbp:Hungvuong972010@vincarcluster.4szijmh.mongodb.net/?retryWrites=true&w=majority"
+    db_name = "vincar"
+    collections = ["devices", "users"]
     mongo_client = AsyncIOMotorClient(db_url)
     mongo_database = mongo_client[db_name]
     mongo_collections = {
