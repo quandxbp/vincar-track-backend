@@ -68,7 +68,7 @@ passlib==1.7.4
     # via fastapi-nano (pyproject.toml)
 pathspec==0.11.1
     # via black
-pip-tools==6.13.0
+pip-tools==6.14.0
     # via fastapi-nano (pyproject.toml)
 platformdirs==3.8.0
     # via black
