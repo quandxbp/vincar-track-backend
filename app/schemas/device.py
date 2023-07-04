@@ -7,10 +7,10 @@ from typing import Optional, List
 
 class Device(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    uuid: str = Field(...)
-    licensePlates: str = Field(...)
-    latitude: float = Field(...)
-    longitude: float = Field(...)
+    uuid: Optional[str] = Field(...)
+    licensePlates: Optional[str] = Field(...)
+    latitude: Optional[float] = Field(...)
+    longitude: Optional[float] = Field(...)
 
     class Config:
         allow_population_by_field_name = True

@@ -8,6 +8,8 @@ from app.schemas.user import *
 
 import app.main as main
 
+from bson import ObjectId
+
 global_settings = config.get_settings()
 USERS_COLLECTION = "users"
 
@@ -26,7 +28,7 @@ async def list_users():
     return users
 
 
-@router.post("/", response_description="Add new user", response_model=User, status_code=201)
+@router.post("/", response_description="Add new user", status_code=201)
 async def create_user(user: UserCreate = Body(...)):
     existed_user = await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": user.username})
     if existed_user:
@@ -34,11 +36,12 @@ async def create_user(user: UserCreate = Body(...)):
     hashed_password = get_password_hash(user.password)
     user_dict = {"username": user.username, "hashed_password": hashed_password, "password": user.password}
     new_user = await main.app.state.mongo_collections[USERS_COLLECTION].insert_one(jsonable_encoder(user_dict))
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=jsonable_encoder({"_id": str(new_user.inserted_id)}))
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"id": str(new_user.inserted_id)})
 
 
 @router.delete("/{user_id}", response_description="Delete a user")
 async def delete_user(user_id: str):
+    user_id = ObjectId(user_id)
     delete_result = await main.app.state.mongo_collections[USERS_COLLECTION].delete_one({"_id": user_id})
 
     if delete_result.deleted_count == 1:
@@ -49,6 +52,7 @@ async def delete_user(user_id: str):
 
 @router.put("/{user_id}", response_description="Update a user", response_model=ResponseUser)
 async def update_user(user_id: str, user: UpdateUser = Body(...)):
+    user_id = ObjectId(user_id)
     user = {k: v for k, v in user.dict().items() if v is not None}
 
     if len(user) >= 1:
@@ -68,6 +72,7 @@ async def update_user(user_id: str, user: UpdateUser = Body(...)):
 
 @router.put("/device/{user_id}", response_description="Update a user's Device", response_model=ResponseUser)
 async def update_device_user(user_id: str, data: UpdateUserDevice = Body(...)):
+    user_id = ObjectId(user_id)
     data = {k: v for k, v in data.dict().items() if v is not None}
 
     if len(data) >= 1:
