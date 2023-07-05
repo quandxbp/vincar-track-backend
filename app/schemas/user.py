@@ -7,12 +7,12 @@ from datetime import datetime
 
 class UserCreate(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    username: str = Field(...)
-    password: str = Field(...)
-    hashed_password: str = Field(...)
-    name: str = Field(...)
-    email: str = Field(...)
-    address: str = Field(...)
+    username: Optional[str] = Field(...)
+    password: Optional[str] = Field(...)
+    hashed_password: Optional[str] = Field(...)
+    name: Optional[str] = Field(...)
+    email: Optional[str] = Field(...)
+    address: Optional[str] = Field(...)
     devices: Optional[List[str]] = Field(default=[], alias="devices")
     createdDate: datetime = Field(default_factory=datetime.utcnow)
     writeDate: datetime = Field(default_factory=datetime.utcnow)
