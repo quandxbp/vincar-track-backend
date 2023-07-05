@@ -26,6 +26,7 @@ class UpdateDevice(BaseModel):
     licensePlates: Optional[str]
     latitude: Optional[float]
     longitude: Optional[float]
+    writeDate: Optional[datetime]
 
     class Config:
         arbitrary_types_allowed = True
