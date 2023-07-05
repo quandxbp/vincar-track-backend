@@ -2,7 +2,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 from app.schemas.py_object import PyObjectId
 from typing import Optional, List
-from app.schemas.device import Device
+from datetime import datetime
 
 
 class UserCreate(BaseModel):
@@ -14,6 +14,8 @@ class UserCreate(BaseModel):
     email: str = Field(...)
     address: str = Field(...)
     devices: Optional[List[str]] = Field(default=[], alias="devices")
+    createdDate: datetime = Field(default_factory=datetime.utcnow)
+    writeDate: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
         allow_population_by_field_name = True

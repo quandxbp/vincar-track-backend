@@ -3,6 +3,7 @@ from bson.errors import InvalidId
 from pydantic import BaseModel, Field
 from app.schemas.py_object import PyObjectId
 from typing import Optional, List
+from datetime import datetime
 
 
 class Device(BaseModel):
@@ -11,6 +12,8 @@ class Device(BaseModel):
     licensePlates: Optional[str] = Field(...)
     latitude: Optional[float] = Field(...)
     longitude: Optional[float] = Field(...)
+    createdDate: datetime = Field(default_factory=datetime.utcnow)
+    writeDate: datetime = Field(default_factory=datetime.utcnow)
 
     class Config:
         allow_population_by_field_name = True
