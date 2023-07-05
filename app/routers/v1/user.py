@@ -28,6 +28,14 @@ async def list_users():
     return users
 
 
+@router.get("/{id}", response_description="Get a single device", response_model=UpdateUser)
+async def show_user(id: str):
+    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": ObjectId(id)})) is not None:
+        return user
+
+    raise HTTPException(status_code=404, detail=f"device {id} not found")
+
+
 @router.post("/", response_description="Add new user", status_code=201)
 async def create_user(user: UserCreate = Body(...)):
     existed_user = await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": user.username})
