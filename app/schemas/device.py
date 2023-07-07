@@ -22,6 +22,7 @@ class Device(BaseModel):
 
 
 class UpdateDevice(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     uuid: Optional[str]
     licensePlates: Optional[str]
     latitude: Optional[float]

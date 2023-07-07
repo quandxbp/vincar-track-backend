@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 
 from app import config
 from app.schemas.user import *
+from app.schemas.device import *
 
 import app.main as main
 
@@ -12,6 +13,7 @@ from bson import ObjectId
 
 global_settings = config.get_settings()
 USERS_COLLECTION = "users"
+DEVICES_COLLECTION = "devices"
 
 router = APIRouter()
 
@@ -28,9 +30,10 @@ async def list_users():
     return users
 
 
-@router.get("/{id}", response_description="Get a single device", response_model=UpdateUser)
-async def show_user(id: str):
-    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": ObjectId(id)})) is not None:
+@router.get("/{user_id}", response_description="Get a single device", response_model=UpdateUser)
+async def show_user(user_id: str):
+    # user_id = ObjectId(user_id)
+    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})) is not None:
         return user
 
     raise HTTPException(status_code=404, detail=f"device {id} not found")
@@ -41,16 +44,18 @@ async def create_user(user: UserCreate = Body(...)):
     existed_user = await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": user.username})
     if existed_user:
         raise HTTPException(status_code=400, detail="Username already taken")
-    hashed_password = get_password_hash(user.password)
-    user_dict = {"username": user.username, "hashed_password": hashed_password, "password": user.password}
-    new_user = await main.app.state.mongo_collections[USERS_COLLECTION].insert_one(jsonable_encoder(user_dict))
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"id": str(new_user.inserted_id)})
+    # hashed_password = get_password_hash(user.password)
+    # user_dict = {"username": user.username, "hashed_password": hashed_password, "password": user.password}
+    new_user = await main.app.state.mongo_collections[USERS_COLLECTION].insert_one(jsonable_encoder(user))
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(new_user.inserted_id)})
 
 
 @router.delete("/{user_id}", response_description="Delete a user")
 async def delete_user(user_id: str):
-    user_id = ObjectId(user_id)
-    delete_result = await main.app.state.mongo_collections[USERS_COLLECTION].delete_one({"_id": user_id})
+    # user_id = ObjectId(user_id)
+    delete_result = await main.app.state.mongo_collections[USERS_COLLECTION].delete_one(
+        {"_id": {"$in": [user_id, ObjectId(user_id)]}}
+    )
 
     if delete_result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -60,7 +65,7 @@ async def delete_user(user_id: str):
 
 @router.put("/{user_id}", response_description="Update a user", response_model=ResponseUser)
 async def update_user(user_id: str, user: UpdateUser = Body(...)):
-    user_id = ObjectId(user_id)
+    # user_id = ObjectId(user_id)
     user = {k: v for k, v in user.dict().items() if v is not None}
 
     if len(user) >= 1:
@@ -78,9 +83,22 @@ async def update_user(user_id: str, user: UpdateUser = Body(...)):
     raise HTTPException(status_code=404, detail=f"user {user_id} not found")
 
 
+@router.get("/device/{user_id}", response_description="List all devices by user", response_model=List[Device])
+async def list_devices_by_user_id(user_id: str):
+    # user_id = ObjectId(user_id)
+    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})) is not None:
+        device_ids = user.get('devices', [])
+        devices = await main.app.state.mongo_collections[DEVICES_COLLECTION].find(
+            {"_id": {"$in": device_ids}}
+        ).to_list(length=None)
+        main.app.state.logger.debug(f"DEBUG {devices}")
+        return devices
+    raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+
+
 @router.put("/device/{user_id}", response_description="Update a user's Device", response_model=ResponseUser)
-async def update_device_user(user_id: str, data: UpdateUserDevice = Body(...)):
-    user_id = ObjectId(user_id)
+async def update_user_device(user_id: str, data: UpdateUserDevice = Body(...)):
+    # user_id = ObjectId(user_id)
     data = {k: v for k, v in data.dict().items() if v is not None}
 
     if len(data) >= 1:

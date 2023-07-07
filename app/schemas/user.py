@@ -8,11 +8,9 @@ from datetime import datetime
 class UserCreate(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: Optional[str] = Field(...)
-    password: Optional[str] = Field(...)
-    hashed_password: Optional[str] = Field(...)
-    name: Optional[str] = Field(...)
-    email: Optional[str] = Field(...)
-    address: Optional[str] = Field(...)
+    # name: Optional[str] = Field(...)
+    # email: Optional[str] = Field(...)
+    # address: Optional[str] = Field(...)
     devices: Optional[List[str]] = Field(default=[], alias="devices")
     createdDate: datetime = Field(default_factory=datetime.utcnow)
     writeDate: datetime = Field(default_factory=datetime.utcnow)
@@ -43,6 +41,8 @@ class UpdateUserDevice(BaseModel):
 
 
 class ResponseUser(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    username: Optional[str]
     name: Optional[str]
     email: Optional[str]
     address: Optional[str]
