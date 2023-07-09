@@ -28,39 +28,44 @@ async def create_device(device: CreateDevice = Body(...)):
 @router.get("/", response_description="List all devices", response_model=List[Device])
 async def list_devices():
     devices = await main.app.state.mongo_collections[DEVICES_COLLECTION].find().to_list(1000)
+    for device in devices:
+        if device["writeDate"] is not None:
+            device["isAlive"] = (datetime.utcnow() - device["writeDate"]) <= timedelta(minutes=1)
     return devices
 
 
-@router.get("/{device_id}", response_description="Get a single device", response_model=Device)
-async def show_device(device_id: str):
-    if (device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"_id": device_id})) is not None:
+@router.get("/{uuid}", response_description="Get a single device", response_model=Device)
+async def show_device(uuid: str):
+    if (device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": uuid})) is not None:
+        if device["writeDate"] is not None:
+            device["isAlive"] = (datetime.utcnow() - device["writeDate"]) <= timedelta(minutes=1)
         return device
 
-    raise HTTPException(status_code=404, detail=f"device {device_id} not found")
+    raise HTTPException(status_code=404, detail=f"device {uuid} not found")
 
 
-@router.put("/{device_id}", response_description="Update a device")
-async def update_device(device_id: str, device: UpdateDevice = Body(...)):
+@router.put("/{uuid}", response_description="Update a device")
+async def update_device(uuid: str, device: UpdateDevice = Body(...)):
     device = {k: v for k, v in device.dict().items() if v is not None}
 
     if len(device) >= 1:
-        update_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].update_one({"_id": device_id},
+        update_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].update_one({"uuid": uuid},
                                                                                               {"$set": device})
 
         if update_result.modified_count == 1:
-            JSONResponse(status_code=status.HTTP_200_OK, content={"_id": device_id})
+            JSONResponse(status_code=status.HTTP_200_OK, content={"uuid": uuid})
 
-    if (existing_device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"_id": device_id})) is not None:
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"_id": device_id})
+    if (existing_device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": uuid})) is not None:
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"uuid": uuid})
 
-    raise HTTPException(status_code=404, detail=f"device {device_id} not found")
+    raise HTTPException(status_code=404, detail=f"device {uuid} not found")
 
 
-@router.delete("/{device_id}", response_description="Delete a device")
-async def delete_device(device_id: str):
-    delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"_id": {"$in": [device_id, ObjectId(device_id)]}})
+@router.delete("/{uuid}", response_description="Delete a device")
+async def delete_device(uuid: str):
+    delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"uuid": uuid})
 
     if delete_result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    raise HTTPException(status_code=404, detail=f"device {device_id} not found")
+    raise HTTPException(status_code=404, detail=f"device {uuid} not found")

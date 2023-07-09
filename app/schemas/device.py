@@ -49,6 +49,7 @@ class UpdateDevice(BaseModel):
 
 class DeviceResponse(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    licensePlates: Optional[str]
     latitude: Optional[float]
     longitude: Optional[float]
     writeDate: Optional[datetime]
