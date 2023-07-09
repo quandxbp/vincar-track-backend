@@ -8,9 +8,6 @@ from datetime import datetime
 class UserCreate(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: Optional[str] = Field(...)
-    # name: Optional[str] = Field(...)
-    # email: Optional[str] = Field(...)
-    # address: Optional[str] = Field(...)
     devices: Optional[List[str]] = Field(default=[], alias="devices")
     createdDate: datetime = Field(default_factory=datetime.utcnow)
     writeDate: datetime = Field(default_factory=datetime.utcnow)
@@ -27,6 +24,7 @@ class UpdateUser(BaseModel):
     address: Optional[str]
 
     class Config:
+        allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -36,6 +34,7 @@ class UpdateUserDevice(BaseModel):
     is_add: bool
 
     class Config:
+        allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -49,6 +48,7 @@ class ResponseUser(BaseModel):
     devices: Optional[List[str]]
 
     class Config:
+        allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -71,7 +71,3 @@ class User(BaseModel):
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-
-
-class UserInDB(User):
-    hashed_password: str

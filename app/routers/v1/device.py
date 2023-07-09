@@ -14,8 +14,12 @@ DEVICES_COLLECTION = "devices"
 
 router = APIRouter()
 
+
 @router.post("/", response_description="Add new device")
-async def create_device(device: Device = Body(...)):
+async def create_device(device: CreateDevice = Body(...)):
+    existed_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": device.uuid})
+    if existed_device:
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": existed_device.id})
     device = jsonable_encoder(device)
     new_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].insert_one(device)
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(new_device.inserted_id)})
@@ -37,7 +41,6 @@ async def show_device(device_id: str):
 
 @router.put("/{device_id}", response_description="Update a device")
 async def update_device(device_id: str, device: UpdateDevice = Body(...)):
-    # device_id = ObjectId(id)
     device = {k: v for k, v in device.dict().items() if v is not None}
 
     if len(device) >= 1:
@@ -55,7 +58,6 @@ async def update_device(device_id: str, device: UpdateDevice = Body(...)):
 
 @router.delete("/{device_id}", response_description="Delete a device")
 async def delete_device(device_id: str):
-    # device_id = ObjectId(id)
     delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"_id": {"$in": [device_id, ObjectId(device_id)]}})
 
     if delete_result.deleted_count == 1:

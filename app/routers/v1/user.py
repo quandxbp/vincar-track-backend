@@ -30,13 +30,12 @@ async def list_users():
     return users
 
 
-@router.get("/{user_id}", response_description="Get a single device", response_model=UpdateUser)
-async def show_user(user_id: str):
-    # user_id = ObjectId(user_id)
-    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})) is not None:
+@router.get("/{username}", response_description="Get a single User", response_model=UpdateUser)
+async def show_user(username: str):
+    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": username})) is not None:
         return user
 
-    raise HTTPException(status_code=404, detail=f"device {id} not found")
+    raise HTTPException(status_code=404, detail=f"User {username} not found")
 
 
 @router.post("/", response_description="Add new user", status_code=201)
@@ -52,7 +51,6 @@ async def create_user(user: UserCreate = Body(...)):
 
 @router.delete("/{user_id}", response_description="Delete a user")
 async def delete_user(user_id: str):
-    # user_id = ObjectId(user_id)
     delete_result = await main.app.state.mongo_collections[USERS_COLLECTION].delete_one(
         {"_id": {"$in": [user_id, ObjectId(user_id)]}}
     )
@@ -63,46 +61,47 @@ async def delete_user(user_id: str):
     raise HTTPException(status_code=404, detail=f"user {user_id} not found")
 
 
-@router.put("/{user_id}", response_description="Update a user", response_model=ResponseUser)
-async def update_user(user_id: str, user: UpdateUser = Body(...)):
-    # user_id = ObjectId(user_id)
+@router.put("/{username}", response_description="Update a user", response_model=ResponseUser)
+async def update_user(username: str, user: UpdateUser = Body(...)):
     user = {k: v for k, v in user.dict().items() if v is not None}
 
     if len(user) >= 1:
-        update_result = await main.app.state.mongo_collections[USERS_COLLECTION].update_one({"_id": user_id}, {"$set": user})
+        update_result = await main.app.state.mongo_collections[USERS_COLLECTION].update_one({"username": username}, {"$set": user})
 
         if update_result.modified_count == 1:
             if (
-                updated_user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})
+                updated_user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": username})
             ) is not None:
                 return updated_user
 
-    if (existing_user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})) is not None:
+    if (existing_user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": username})) is not None:
         return existing_user
 
-    raise HTTPException(status_code=404, detail=f"user {user_id} not found")
+    raise HTTPException(status_code=404, detail=f"User {username} not found")
 
 
-@router.get("/device/{user_id}", response_description="List all devices by user", response_model=List[Device])
-async def list_devices_by_user_id(user_id: str):
-    # user_id = ObjectId(user_id)
-    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})) is not None:
-        device_ids = user.get('devices', [])
+@router.get("/device/{username}",
+            response_description="List all devices by username",
+            response_model=List[DeviceResponse])
+async def list_devices_by_user_id(username: str):
+    if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": username})) is not None:
+        device_uuid_lst = user.get('devices', [])
         devices = await main.app.state.mongo_collections[DEVICES_COLLECTION].find(
-            {"_id": {"$in": device_ids}}
+            {"uuid": {"$in": device_uuid_lst}}
         ).to_list(length=None)
-        main.app.state.logger.debug(f"DEBUG {devices}")
+        for device in devices:
+            if device["writeDate"] is not None:
+                device["isAlive"] = (datetime.utcnow() - device["writeDate"]) <= timedelta(minutes=1)
         return devices
-    raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+    raise HTTPException(status_code=404, detail=f"User {username} not found")
 
 
-@router.put("/device/{user_id}", response_description="Update a user's Device", response_model=ResponseUser)
-async def update_user_device(user_id: str, data: UpdateUserDevice = Body(...)):
-    # user_id = ObjectId(user_id)
+@router.put("/device/{username}", response_description="Update a user's Device", response_model=ResponseUser)
+async def update_user_device(username: str, data: UpdateUserDevice = Body(...)):
     data = {k: v for k, v in data.dict().items() if v is not None}
 
     if len(data) >= 1:
-        user = await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"_id": user_id})
+        user = await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": username})
         if user:
             device_id = data['device_id']
             devices = user.get('devices', [])
@@ -112,15 +111,15 @@ async def update_user_device(user_id: str, data: UpdateUserDevice = Body(...)):
                 devices.remove(device_id)
 
             update_result = await main.app.state.mongo_collections[USERS_COLLECTION].update_one(
-                {"_id": user_id},
+                {"username": username},
                 {"$set": {'devices': list(set(devices))}}
             )
             if update_result.modified_count == 1:
                 if (
                     updated_user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one(
-                        {"_id": user_id})
+                        {"username": username})
                 ) is not None:
                     return updated_user
         else:
-            raise HTTPException(status_code=404, detail=f"Could not find user {user_id}")
+            raise HTTPException(status_code=404, detail=f"Could not find user {username}")
     raise HTTPException(status_code=404, detail="Provided data is needed")
