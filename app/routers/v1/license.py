@@ -40,14 +40,14 @@ async def get_license(code: str):
 
 @router.get("/by-user/{username}", response_description="Get a single license by username", response_model=License)
 async def get_license_by_username(username: str):
-    if (l := await main.app.state.mongo_collections[LICENSE_COLLECTION].find_one({"username": username})) is not None:
-        return l
+    if (license_data := await main.app.state.mongo_collections[LICENSE_COLLECTION].find_one({"username": username})) is not None:
+        return license_data
 
     raise HTTPException(status_code=404, detail=f"Username {username} not found")
 
 
 @router.put("/{code}", response_description="Update a license")
-async def update_device(code: str, data: LicenseUpdate = Body(...)):
+async def update_license(code: str, data: LicenseUpdate = Body(...)):
     if (existing_license := await main.app.state.mongo_collections[LICENSE_COLLECTION].find_one({"code": code})) is not None:
         if existing_license.get("username"):
             return JSONResponse(status_code=status.HTTP_200_OK, content={"code": code, "is_exist": True})
@@ -55,7 +55,17 @@ async def update_device(code: str, data: LicenseUpdate = Body(...)):
             license_data = {k: v for k, v in data.dict().items() if v is not None}
             update_result = await main.app.state.mongo_collections[LICENSE_COLLECTION].update_one({"code": code},
                                                                                                   {"$set": license_data})
-            JSONResponse(status_code=status.HTTP_200_OK, content={"code": code, "is_exist": False})
+            return JSONResponse(status_code=status.HTTP_200_OK, content={"code": code, "is_exist": False})
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"License {code} not found")
+
+
+@router.put("/reset/{code}", response_description="Reset a license")
+async def reset_license(code: str):
+    update_result = await main.app.state.mongo_collections[LICENSE_COLLECTION].update_one({"code": code},
+                                                                                          {"$set": {"username": None}})
+    if (existing_license := await main.app.state.mongo_collections[LICENSE_COLLECTION].find_one({"code": code})) is not None:
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"success": True})
     else:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"License {code} not found")
 

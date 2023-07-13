@@ -36,7 +36,7 @@ class LicenseCreate(BaseModel):
 
 class LicenseUpdate(BaseModel):
     username: Optional[str]
-    startDate: datetime
+    startDate: Optional[datetime] = Field(default_factory=datetime.utcnow)
     writeDate: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
     class Config:
