@@ -1,8 +1,8 @@
 from bson import ObjectId
 from pydantic import BaseModel, Field
 from app.schemas.py_object import PyObjectId
-from typing import Optional, List
-from datetime import datetime, timedelta
+from typing import Optional
+from datetime import datetime
 
 
 class Device(BaseModel):
