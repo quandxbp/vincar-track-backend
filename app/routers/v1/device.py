@@ -19,7 +19,7 @@ router = APIRouter()
 async def create_device(device: CreateDevice = Body(...)):
     existed_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": device.uuid})
     if existed_device:
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(existed_device["id"])})
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(existed_device.get("_id"))})
     device = jsonable_encoder(device)
     new_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].insert_one(device)
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(new_device.inserted_id)})
