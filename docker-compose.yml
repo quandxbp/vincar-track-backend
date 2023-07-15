@@ -20,7 +20,7 @@ services:
       - 8069:8069
     depends_on:
       - mongodb
-  
+
   mongodb:
     image: mongo:latest
     env_file:
