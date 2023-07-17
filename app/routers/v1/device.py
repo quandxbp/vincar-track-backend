@@ -46,19 +46,20 @@ async def show_device(uuid: str):
 
 @router.put("/{uuid}", response_description="Update a device")
 async def update_device(uuid: str, device: UpdateDevice = Body(...)):
-    device = {k: v for k, v in device.dict().items() if v is not None}
+    if (found_device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": uuid})) is not None:
 
-    if len(device) >= 1:
-        update_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].update_one({"uuid": uuid},
-                                                                                              {"$set": device})
+        found_device = {k: v for k, v in found_device.dict().items() if v is not None}
 
-        if update_result.modified_count == 1:
-            JSONResponse(status_code=status.HTTP_200_OK, content={"uuid": uuid})
+        if len(found_device) >= 1:
+            update_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].update_one({"uuid": uuid},
+                                                                                                  {"$set": found_device})
 
-    if (existing_device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": uuid})) is not None:
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"uuid": uuid})
-
-    raise HTTPException(status_code=404, detail=f"device {uuid} not found")
+            if update_result.modified_count == 1:
+                return JSONResponse(status_code=status.HTTP_200_OK, content={"uuid": uuid})
+    else:
+        device = jsonable_encoder(device)
+        new_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].insert_one(device)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(new_device.inserted_id)})
 
 
 @router.delete("/{uuid}", response_description="Delete a device")
