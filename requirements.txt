@@ -17,7 +17,7 @@ pyasn1==0.5.0
 pycparser==2.21
 pydantic==1.10.9
 Pygments==2.15.1
-pymongo==3.11.1
+pymongo==4.4.1
 python-jose==3.3.0
 python-multipart==0.0.6
 rich==13.4.2
