@@ -48,11 +48,11 @@ async def show_device(uuid: str):
 async def update_device(uuid: str, device: UpdateDevice = Body(...)):
     if (found_device := await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": uuid})) is not None:
 
-        found_device = {k: v for k, v in found_device.dict().items() if v is not None}
+        device = {k: v for k, v in device.dict().items() if v is not None}
 
         if len(found_device) >= 1:
             update_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].update_one({"uuid": uuid},
-                                                                                                  {"$set": found_device})
+                                                                                                  {"$set": device})
 
             if update_result.modified_count == 1:
                 return JSONResponse(status_code=status.HTTP_200_OK, content={"uuid": uuid})
