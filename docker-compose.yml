@@ -17,7 +17,7 @@ services:
         gunicorn app.main:app --workers 2 \
         --worker-class uvicorn.workers.UvicornWorker -b 0.0.0.0:8069
     ports:
-      - 8069:8069
+      - 80:8069
     depends_on:
       - mongodb
 

@@ -64,7 +64,10 @@ async def update_device(uuid: str, device: UpdateDevice = Body(...)):
 
 @router.delete("/{uuid}", response_description="Delete a device")
 async def delete_device(uuid: str):
-    delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"uuid": uuid})
+    delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_one({"$or": [
+        {"uuid": uuid},
+        {"_id": uuid},
+        {"_id": ObjectId(uuid)}]})
 
     if delete_result.deleted_count == 1:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
