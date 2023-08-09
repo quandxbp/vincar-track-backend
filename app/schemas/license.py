@@ -4,7 +4,8 @@ from app.schemas.py_object import PyObjectId
 from typing import Optional, List
 from datetime import datetime, date
 
-from app.services.license import *\
+from app.services.license import *
+from app.schemas.user import *
 
 
 class License(BaseModel):
@@ -15,6 +16,7 @@ class License(BaseModel):
     createdDate: Optional[datetime]
     writeDate: Optional[datetime]
     lifetime: Optional[int]
+    user: Optional[ResponseUser]
 
     class Config:
         allow_population_by_field_name = True

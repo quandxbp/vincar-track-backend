@@ -7,6 +7,9 @@ from app.utils import get_logger
 
 logger = get_logger(__name__)
 
+LICENSE_COLLECTION = "license"
+USERS_COLLECTION = "users"
+DEVICES_COLLECTION = "devices"
 
 class Settings(BaseSettings):
     """

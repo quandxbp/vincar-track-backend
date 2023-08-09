@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from app.schemas.py_object import PyObjectId
 from typing import Optional, List
 from datetime import datetime, timedelta
+from app.schemas.device import Device
 
 
 class UserCreate(BaseModel):
@@ -46,6 +47,7 @@ class ResponseUser(BaseModel):
     email: Optional[str]
     address: Optional[str]
     devices: Optional[List[str]]
+    devices_data: Optional[List[Device]]
 
     class Config:
         allow_population_by_field_name = True
