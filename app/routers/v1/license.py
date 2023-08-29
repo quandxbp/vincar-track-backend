@@ -15,8 +15,9 @@ router = APIRouter()
 
 
 @router.get("/", response_description="List all licenses", response_model=List[License])
-async def list_licenses():
-    licenses = await main.app.state.mongo_collections[config.LICENSE_COLLECTION].find().to_list(1000)
+async def list_licenses(page: int = 1, limit: int = 10):
+    skip = (page - 1) * limit
+    licenses = await main.app.state.mongo_collections[config.LICENSE_COLLECTION].find().skip(skip).limit(limit).to_list(1000)
     activated_licenses = list(filter(lambda x: x.get("username"), licenses))
     for l in activated_licenses:
         if (existing_user := await main.app.state.mongo_collections[config.USERS_COLLECTION].find_one(

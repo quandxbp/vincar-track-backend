@@ -26,13 +26,10 @@ async def create_device(device: CreateDevice = Body(...)):
 
 
 @router.get("/", response_description="List all devices", response_model=List[Device])
-async def list_devices():
-    devices = await main.app.state.mongo_collections[DEVICES_COLLECTION].find().to_list(1000)
-    # for device in devices:
-    #     if device["writeDate"] is not None:
-    #         device["isAlive"] = (datetime.utcnow() - device["writeDate"]) <= timedelta(minutes=1)
+async def list_devices(page: int = 1, limit: int = 10):
+    skip = (page - 1) * limit
+    devices = await main.app.state.mongo_collections[DEVICES_COLLECTION].find().skip(skip).limit(limit).to_list(1000)
     return devices
-
 
 @router.get("/{uuid}", response_description="Get a single device", response_model=Device)
 async def show_device(uuid: str):

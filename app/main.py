@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app import config
@@ -15,6 +16,28 @@ global_settings = config.get_settings()
 if global_settings.environment == "local":
     get_logger("uvicorn")
 
+# Define your secret token
+SECRET_TOKEN = ""
+
+RESTRICT_PATHS = ['']
+RESTRICT_METHODS = ['DELETE']
+
+# Define the middleware function
+async def check_secret_token(request, call_next):
+    # Get the value of the "Authorization" header
+    token = request.headers.get("Authorization")
+
+    # Check if the token matches the secret token and the request method is DELETE
+    if request.method in RESTRICT_METHODS and token != SECRET_TOKEN:
+        return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"message": "Invalid Token"})
+
+    # Call the next middleware or the route handler
+    response = await call_next(request)
+    return response
+
+# Add the middleware to the app
+app.middleware("http")(check_secret_token)
+
 # Set all CORS enabled origins
 app.add_middleware(
     CORSMiddleware,
@@ -26,7 +49,6 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/auth")
 app.include_router(v1, prefix="/api")
-
 
 @app.on_event("startup")
 async def startup_event():
