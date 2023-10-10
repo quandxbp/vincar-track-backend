@@ -92,6 +92,8 @@ async def list_devices_by_user_id(username: str):
         ).to_list(length=None)
         for device in devices:
             if device["writeDate"] is not None:
+                if isinstance(device["writeDate"], str):
+                    device["writeDate"] = datetime.strptime(device["writeDate"], "%Y-%m-%dT%H:%M:%S.%fZ")
                 device["isAlive"] = (datetime.utcnow() - device["writeDate"]) <= timedelta(minutes=1)
         return devices
     raise HTTPException(status_code=404, detail=f"User {username} not found")
