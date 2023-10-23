@@ -108,6 +108,10 @@ async def update_user_device(username: str, data: UpdateUserDevice = Body(...)):
         if user:
             device_id = data['device_id']
             devices = user.get('devices', [])
+
+            print(devices)
+            print([type(x) for x in devices])
+
             if data['is_add']:
                 devices.append(device_id)
             else:
