@@ -76,8 +76,8 @@ async def delete_device(uuid: str):
     raise HTTPException(status_code=404, detail=f"device {uuid} not found")
 
 
-@router.delete("/{token}", response_description="Delete all issued devices")
-async def delete_issue_devices(token: str):
+@router.delete("/", response_description="Delete all issued devices")
+async def delete_issue_devices():
     # if token == PRIVATE_TOKEN:
     delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_many({"uuid": None})
 
