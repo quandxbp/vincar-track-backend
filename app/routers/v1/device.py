@@ -12,6 +12,8 @@ from bson import ObjectId
 global_settings = config.get_settings()
 DEVICES_COLLECTION = "devices"
 
+PRIVATE_TOKEN = "Hungvuong12."
+
 router = APIRouter()
 
 
@@ -20,6 +22,8 @@ async def create_device(device: CreateDevice = Body(...)):
     existed_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].find_one({"uuid": device.uuid})
     if existed_device:
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(existed_device.get("_id"))})
+    if not device.uuid:
+        return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"error": "Invalid content"})
     device = jsonable_encoder(device)
     new_device = await main.app.state.mongo_collections[DEVICES_COLLECTION].insert_one(device)
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={"_id": str(new_device.inserted_id)})
@@ -70,3 +74,14 @@ async def delete_device(uuid: str):
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     raise HTTPException(status_code=404, detail=f"device {uuid} not found")
+
+
+@router.delete("/{token}", response_description="Delete all issued devices")
+async def delete_issue_devices(token: str):
+    if token == PRIVATE_TOKEN:
+        delete_result = await main.app.state.mongo_collections[DEVICES_COLLECTION].delete_many({"uuid": None})
+
+        if delete_result.deleted_count > 0:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    raise HTTPException(status_code=404, detail=f"Error when deleting error devices!")
