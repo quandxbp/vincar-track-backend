@@ -83,5 +83,7 @@ async def delete_issue_devices(token: str):
 
         if delete_result.deleted_count > 0:
             return Response(status_code=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status_code=status.HTTP_204_NO_CONTENT, detail=f"Deleting nothing")
 
     raise HTTPException(status_code=404, detail=f"Error when deleting error devices!")
