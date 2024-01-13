@@ -31,7 +31,7 @@ async def list_users(page: int = 1, limit: int = 10):
     return users
 
 
-@router.get("/{username}", response_description="Get a single User", response_model=UpdateUser)
+@router.get("/{username}", response_description="Get a single User", response_model=ResponseUser)
 async def show_user(username: str):
     if (user := await main.app.state.mongo_collections[USERS_COLLECTION].find_one({"username": username})) is not None:
         return user
